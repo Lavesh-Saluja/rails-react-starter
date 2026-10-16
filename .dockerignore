@@ -1,0 +1,47 @@
+# See https://docs.docker.com/engine/reference/builder/#dockerignore-file for more about ignoring files.
+
+# Ignore git directory.
+/.git/
+/.gitignore
+
+# Ignore bundler config.
+/.bundle
+
+# Ignore all environment files.
+/.env*
+
+# Ignore all default key files.
+/config/master.key
+/config/credentials/*.key
+
+# Ignore all logfiles and tempfiles.
+/log/*
+/tmp/*
+
+# Ignore development files
+/.devcontainer
+
+# Ignore Docker-related files
+/.dockerignore
+/Dockerfile*
+
+# Tests and local tooling are not needed at runtime.
+/test/
+/coverage/
+/.rubocop.yml
+
+# The React app is built and hosted separately; the API image needs none of it.
+/app/javascript/
+/node_modules/
+/dist/
+/package.json
+/package-lock.json
+/*.config.js
+/jsconfig.json
+/.nvmrc
+/.prettier*
+/.github/
+/compose.yaml
+/lefthook.yml
+/Makefile
+/README.md

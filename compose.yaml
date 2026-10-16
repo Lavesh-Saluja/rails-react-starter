@@ -1,0 +1,31 @@
+# OPTIONAL: PostgreSQL in a container for machines without a native install.
+# Rails and Vite still run natively; nothing else in this repo needs Docker.
+#
+#   docker compose up -d db      # start (data persists in the db-data volume)
+#   docker compose down          # stop, keep data
+#   docker compose down -v       # DESTRUCTIVE: stop and delete all data
+#
+# Then point Rails at it in .env (see .env.example):
+#   DB_HOST=localhost  DB_PORT=5434  DB_USERNAME=starter  DB_PASSWORD=starter_local_only
+#
+# Port 5434 avoids clashing with a native PostgreSQL on 5432. Override any value by
+# exporting COMPOSE_DB_PORT / COMPOSE_DB_USER / COMPOSE_DB_PASSWORD or putting them
+# in a git-ignored .env file next to this one. These are local-only credentials.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${COMPOSE_DB_USER:-starter}
+      POSTGRES_PASSWORD: ${COMPOSE_DB_PASSWORD:-starter_local_only}
+    ports:
+      - "127.0.0.1:${COMPOSE_DB_PORT:-5434}:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\""]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  db-data:

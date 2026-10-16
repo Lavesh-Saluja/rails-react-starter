@@ -1,0 +1,30 @@
+# Environment files hold local or real credentials. Only .env.example is committed.
+.env
+.env.*
+!.env.example
+*.local
+
+# Rails
+/.bundle/
+/log/
+/tmp/
+/vendor/bundle/
+/config/master.key
+/config/credentials/*.key
+
+# JavaScript
+node_modules/
+/dist/
+
+# Local tooling
+/coverage/
+lefthook-local.yml
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# This project uses npm only (package.json "packageManager"); never commit Yarn artifacts.
+yarn.lock
+.yarn/
+.pnp.*

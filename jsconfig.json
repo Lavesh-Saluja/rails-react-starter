@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "baseUrl": "app/javascript/src",
+    "jsx": "react-jsx",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "target": "es2023"
+  },
+  "include": ["app/javascript/src"]
+}

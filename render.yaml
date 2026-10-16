@@ -1,0 +1,67 @@
+# Render Blueprint: the API, the React static site and PostgreSQL, all on the free plan.
+#
+# One-time setup: Render dashboard > New > Blueprint > pick this repository (see README
+# section 17). Nothing here deploys on push: the API is image-backed (never auto-deploys) and
+# the static site has auto-deploy off. Deploys happen only from the manual GitHub workflow
+# .github/workflows/deploy.yml, which calls each service's deploy hook.
+#
+# For the next assignment, rename the three services/database below and the URLs that
+# contain those names (CORS_ORIGINS, APP_HOSTS, VITE_API_BASE_URL, image url).
+# No secrets in this file: Render generates SECRET_KEY_BASE and provides DATABASE_URL.
+
+databases:
+  - name: rails-react-starter-db
+    plan: free
+    region: singapore
+    postgresMajorVersion: '16'
+    databaseName: rails_react_starter_production
+    user: rails_react_starter
+
+services:
+  - type: web
+    name: rails-react-starter-api
+    runtime: image
+    image:
+      # Pushed by deploy.yml. The package must be public (or add registry credentials).
+      url: ghcr.io/lavesh-saluja/rails-react-starter-api:latest
+    plan: free
+    region: singapore
+    # Free plan has no pre-deploy command, so migrations run at start (single instance only).
+    dockerCommand: ./bin/migrate-and-start
+    healthCheckPath: /api/health/live
+    numInstances: 1
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: rails-react-starter-db
+          property: connectionString
+      - key: SECRET_KEY_BASE
+        generateValue: true
+      # Exact frontend origin: scheme + host, no trailing slash.
+      - key: CORS_ORIGINS
+        value: https://rails-react-starter-web.onrender.com
+      - key: APP_HOSTS
+        value: rails-react-starter-api.onrender.com
+      - key: RAILS_LOG_LEVEL
+        value: info
+
+  - type: web
+    name: rails-react-starter-web
+    runtime: static
+    # version.txt lets deploy.yml confirm which commit is live.
+    buildCommand: npm ci && npm run build && echo "$RENDER_GIT_COMMIT" > dist/version.txt
+    staticPublishPath: ./dist
+    autoDeployTrigger: 'off'
+    previews:
+      generation: 'off'
+    # Client-side routing: every unknown path serves the React app.
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: NODE_VERSION
+        value: '22'
+      # Public, compiled into the bundle. Never put secrets in VITE_* variables.
+      - key: VITE_API_BASE_URL
+        value: https://rails-react-starter-api.onrender.com

@@ -1,0 +1,70 @@
+{
+  "app": {
+    "title": "Rails React Starter"
+  },
+  "common": {
+    "dismiss": "Dismiss",
+    "retry": "Try again",
+    "loading": "Loading…"
+  },
+  "errors": {
+    "network": "Could not reach the server. Check that the API is running and try again.",
+    "unexpectedResponse": "The server returned an unexpected response.",
+    "requestFailed": "Request failed with status {{status}}.",
+    "generic": "Something went wrong. Please try again."
+  },
+  "notFound": {
+    "title": "Page not found",
+    "description": "The page you are looking for does not exist.",
+    "backHome": "Go to the home page"
+  },
+  "sampleItems": {
+    "title": "Sample items",
+    "subtitle": "A demonstration CRUD workflow. Replace it with your assignment's feature.",
+    "listHeading": "Items",
+    "loading": "Loading items…",
+    "empty": "No items yet. Add your first one with the form.",
+    "addedOn": "Added {{date}}",
+    "confirmDelete": "Delete \"{{name}}\"? This cannot be undone.",
+    "form": {
+      "addTitle": "Add an item",
+      "editTitle": "Edit item",
+      "name": "Name",
+      "description": "Description",
+      "optional": "(optional)",
+      "add": "Add item",
+      "save": "Save changes",
+      "saving": "Saving…",
+      "cancel": "Cancel"
+    },
+    "actions": {
+      "edit": "Edit",
+      "editLabel": "Edit {{name}}",
+      "delete": "Delete",
+      "deleteLabel": "Delete {{name}}",
+      "deleting": "Deleting…",
+      "backToList": "Back to items"
+    },
+    "notices": {
+      "created": "Added \"{{name}}\".",
+      "updated": "Saved \"{{name}}\".",
+      "deleted": "Deleted \"{{name}}\"."
+    },
+    "validation": {
+      "nameRequired": "Name is required.",
+      "nameTooLong": "Name must be at most {{count}} characters.",
+      "descriptionTooLong": "Description must be at most {{count}} characters."
+    },
+    "show": {
+      "description": "Description",
+      "noDescription": "No description.",
+      "createdAt": "Created",
+      "updatedAt": "Last updated"
+    }
+  },
+  "version": {
+    "summary": "Web {{web}} · API {{api}}",
+    "development": "development",
+    "unavailable": "unavailable"
+  }
+}

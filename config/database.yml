@@ -1,0 +1,34 @@
+# PostgreSQL configuration.
+#
+# Development and test: every DB_* variable is optional. When unset, libpq defaults
+# apply (Unix socket, current OS user, no password). See .env.example.
+# Production: provide a single DATABASE_URL.
+#
+# Rename app_name per assignment so local databases from different projects never collide.
+<% app_name = "starter" %>
+
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  connect_timeout: 5
+
+local: &local
+  <<: *default
+  host: <%= ENV["DB_HOST"] %>
+  port: <%= ENV["DB_PORT"] %>
+  username: <%= ENV["DB_USERNAME"] %>
+  password: <%= ENV["DB_PASSWORD"] %>
+
+development:
+  <<: *local
+  database: <%= app_name %>_development
+
+# Destroyed and recreated by test runs. Never point this at a database you care about.
+test:
+  <<: *local
+  database: <%= app_name %>_test
+
+production:
+  <<: *default
+  url: <%= ENV["DATABASE_URL"] %>

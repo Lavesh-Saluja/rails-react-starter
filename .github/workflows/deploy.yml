@@ -1,0 +1,173 @@
+# Production delivery to Render (render.yaml). MANUAL ONLY: never runs on push, merge or PR.
+#
+# Trigger it from GitHub: Actions > Deploy > Run workflow (branch: main).
+# Four jobs, each starting only after the previous one succeeded:
+#   1. Check CI      CI must have passed for this exact commit on main.
+#   2. Build image   Builds the Rails image, pushes ghcr.io/<owner>/<repo>-api:{sha-<commit>,latest}.
+#   3. Backend       Deploys that exact image to the Render API. The new container runs the
+#                    migrations, then starts; the job waits until /api/health/live reports
+#                    this commit and /api/health/ready is 200 (database reachable).
+#   4. Frontend      Deploys the Render static site and waits until it serves this commit.
+#
+# Configuration (GitHub > Settings > Environments > production):
+#   Secrets   RENDER_BACKEND_DEPLOY_HOOK_URL, RENDER_FRONTEND_DEPLOY_HOOK_URL
+#             (Render > service > Settings > Deploy Hook). Without them the workflow only
+#             builds and pushes the image, which is what the very first run needs.
+#   Variables BACKEND_URL  e.g. https://rails-react-starter-api.onrender.com
+#             FRONTEND_URL e.g. https://rails-react-starter-web.onrender.com
+# Migrations run when the API starts (bin/migrate-and-start); this workflow never migrates.
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  check-ci:
+    name: 1. Check CI passed
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+    steps:
+      - name: Require a passing CI run for this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          conclusion=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci.yml \
+            --branch main --commit "$GITHUB_SHA" --event push \
+            --json conclusion --jq '.[0].conclusion // ""')
+          if [ "$conclusion" != "success" ]; then
+            echo "::error::CI has not passed for $GITHUB_SHA on main (latest result: ${conclusion:-none}). Not deploying."
+            exit 1
+          fi
+          echo "CI passed for $GITHUB_SHA."
+
+  build-image:
+    name: 2. Build and push image
+    needs: check-ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/${{ github.repository }}-api
+          tags: |
+            type=sha,format=long
+            type=raw,value=latest
+
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: true
+          build-args: APP_REVISION=${{ github.sha }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  backend:
+    name: 3. Deploy backend (migrate + start)
+    needs: build-image
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    permissions:
+      contents: read
+    outputs:
+      deployed: ${{ steps.deploy.outputs.deployed }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Deploy this image to Render
+        id: deploy
+        env:
+          DEPLOY_HOOK_URL: ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK_URL }}
+          BACKEND_URL: ${{ vars.BACKEND_URL }}
+        run: |
+          if [ -z "$DEPLOY_HOOK_URL" ]; then
+            echo "::notice::RENDER_BACKEND_DEPLOY_HOOK_URL is not set: image pushed, nothing deployed (first-time setup)."
+            echo "deployed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ -z "$BACKEND_URL" ]; then
+            echo "::error::Set the BACKEND_URL variable so the deploy can be verified."
+            exit 1
+          fi
+          image="ghcr.io/${GITHUB_REPOSITORY,,}-api:sha-${GITHUB_SHA}"
+          encoded=$(jq -rn --arg v "$image" '$v|@uri')
+          curl --fail --silent --show-error --output /dev/null -X POST "${DEPLOY_HOOK_URL}&imgURL=${encoded}"
+          echo "Render deploy requested for $image."
+          echo "deployed=true" >> "$GITHUB_OUTPUT"
+
+      # The container runs bin/migrate-and-start: migrations first, then the server. If a
+      # migration fails the server never starts, Render keeps the old version, and this times out.
+      - name: Wait for migrations and the new API to be live
+        if: steps.deploy.outputs.deployed == 'true'
+        env:
+          BACKEND_URL: ${{ vars.BACKEND_URL }}
+        run: .github/scripts/wait-for-revision.sh "${BACKEND_URL%/}/api/health/live" "$GITHUB_SHA" '.revision // ""'
+
+      - name: Check the API can reach the database
+        if: steps.deploy.outputs.deployed == 'true'
+        env:
+          BACKEND_URL: ${{ vars.BACKEND_URL }}
+        run: |
+          curl --fail --silent --show-error --max-time 60 "${BACKEND_URL%/}/api/health/ready"
+          echo
+
+  frontend:
+    name: 4. Deploy frontend
+    needs: backend
+    if: needs.backend.outputs.deployed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Deploy the static site
+        env:
+          DEPLOY_HOOK_URL: ${{ secrets.RENDER_FRONTEND_DEPLOY_HOOK_URL }}
+          FRONTEND_URL: ${{ vars.FRONTEND_URL }}
+        run: |
+          if [ -z "$DEPLOY_HOOK_URL" ] || [ -z "$FRONTEND_URL" ]; then
+            echo "::error::Set RENDER_FRONTEND_DEPLOY_HOOK_URL (secret) and FRONTEND_URL (variable)."
+            exit 1
+          fi
+          # The static site builds the latest commit on main; the wait below fails if that
+          # is not the commit this run was started for.
+          curl --fail --silent --show-error --output /dev/null -X POST "$DEPLOY_HOOK_URL"
+          echo "Render static site deploy requested."
+
+      - name: Wait for the new frontend to be live
+        env:
+          FRONTEND_URL: ${{ vars.FRONTEND_URL }}
+        run: .github/scripts/wait-for-revision.sh "${FRONTEND_URL%/}/version.txt" "$GITHUB_SHA"
+
+      - name: Check the app loads
+        env:
+          FRONTEND_URL: ${{ vars.FRONTEND_URL }}
+        run: curl --fail --silent --show-error --output /dev/null --max-time 60 "${FRONTEND_URL%/}/"

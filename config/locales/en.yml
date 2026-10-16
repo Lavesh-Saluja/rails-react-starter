@@ -1,0 +1,8 @@
+# API messages. Controllers and services use t("...") instead of hard-coded strings.
+en:
+  errors:
+    not_found: "Not found"
+    validation_failed: "Validation failed"
+    parameter_missing: "Missing or invalid parameter: %{param}"
+    malformed_body: "Malformed request body"
+    not_authorized: "You are not allowed to perform this action"

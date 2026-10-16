@@ -1,0 +1,33 @@
+# Lightweight local Git hooks. GitHub Actions CI is the authoritative quality gate.
+#
+# Installed automatically by `npm install` / `npm ci` (or run `make hooks`).
+# Skip once, deliberately:  git commit --no-verify   |   LEFTHOOK=0 git push
+# Personal overrides go in lefthook-local.yml (git-ignored).
+
+# Fast checks on staged files only. Nothing is auto-fixed or re-staged.
+pre-commit:
+  parallel: true
+  jobs:
+    - name: rubocop
+      glob: "{*.{rb,rake,ru},Gemfile}"
+      run: bundle exec rubocop --force-exclusion {staged_files}
+
+    - name: eslint
+      glob: "*.{js,jsx}"
+      run: npx eslint --max-warnings=0 --no-warn-ignored {staged_files}
+
+    - name: prettier
+      glob:
+        - "app/javascript/**/*.{js,jsx,json,css,html}"
+        - "*.{js,json}"
+      run: npx prettier --check --ignore-unknown {staged_files}
+
+# The full suite, roughly what CI runs, before code leaves your machine.
+pre-push:
+  parallel: true
+  jobs:
+    - name: backend
+      run: bundle exec rubocop && bin/rails test
+
+    - name: frontend
+      run: npm run lint && npm run format:check && npm test && npm run build

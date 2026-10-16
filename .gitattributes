@@ -1,0 +1,10 @@
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary
+
+# Generated lockfiles: hide from diffs by default, keep merge-friendly.
+Gemfile.lock linguist-generated
+package-lock.json linguist-generated
+db/schema.rb linguist-generated

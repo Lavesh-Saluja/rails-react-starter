@@ -1,0 +1,7 @@
+#!/bin/bash -e
+
+# Migrations are intentionally NOT run here: every replica would race to run them.
+# Run them once per deploy instead, e.g. as a release / pre-deploy command:
+#   bin/rails db:migrate
+
+exec "${@}"
