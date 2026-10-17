@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ApiError } from 'apis/client'
+import Button from 'components/commons/Button'
+import { BUTTON_VARIANT } from 'constants/ui'
 import {
   DESCRIPTION_MAX_LENGTH,
   DESCRIPTION_ROWS,
@@ -17,7 +19,7 @@ import {
 
 const FieldError = ({ fieldId, messages }) =>
   messages ? (
-    <p id={errorId(fieldId)} className="field-error">
+    <p id={errorId(fieldId)} className="text-[0.9rem] text-danger">
       {messages.join(' ')}
     </p>
   ) : null
@@ -59,14 +61,18 @@ const Form = ({ item, onSubmit, onCancel }) => {
   }
 
   return (
-    <form className="card form" onSubmit={handleSubmit} noValidate>
+    <form
+      className="rounded-lg border border-border bg-surface p-5"
+      onSubmit={handleSubmit}
+      noValidate
+    >
       <h2>
         {isEditing
           ? t('sampleItems.form.editTitle')
           : t('sampleItems.form.addTitle')}
       </h2>
 
-      <div className="field">
+      <div className="mb-4 flex flex-col gap-1.5">
         <label htmlFor={FIELD_IDS.name}>{t('sampleItems.form.name')}</label>
         <input
           id={FIELD_IDS.name}
@@ -82,10 +88,12 @@ const Form = ({ item, onSubmit, onCancel }) => {
         <FieldError fieldId={FIELD_IDS.name} messages={errors.name} />
       </div>
 
-      <div className="field">
+      <div className="mb-4 flex flex-col gap-1.5">
         <label htmlFor={FIELD_IDS.description}>
           {t('sampleItems.form.description')}{' '}
-          <span className="optional">{t('sampleItems.form.optional')}</span>
+          <span className="font-normal text-muted">
+            {t('sampleItems.form.optional')}
+          </span>
         </label>
         <textarea
           id={FIELD_IDS.description}
@@ -105,19 +113,18 @@ const Form = ({ item, onSubmit, onCancel }) => {
         />
       </div>
 
-      <div className="actions">
-        <button type="submit" className="button" disabled={isSubmitting}>
+      <div className="flex flex-wrap gap-2">
+        <Button type="submit" disabled={isSubmitting}>
           {submitLabel()}
-        </button>
+        </Button>
         {isEditing && (
-          <button
-            type="button"
-            className="button button--secondary"
+          <Button
+            variant={BUTTON_VARIANT.SECONDARY}
             onClick={onCancel}
             disabled={isSubmitting}
           >
             {t('sampleItems.form.cancel')}
-          </button>
+          </Button>
         )}
       </div>
     </form>

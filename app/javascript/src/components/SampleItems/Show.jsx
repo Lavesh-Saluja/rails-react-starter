@@ -21,9 +21,9 @@ const Show = () => {
     if (isError) return <LoadError error={error} onRetry={() => refetch()} />
 
     return (
-      <article className="card">
+      <article className="rounded-lg border border-border bg-surface p-5">
         <h1>{item.name}</h1>
-        <dl className="details">
+        <dl className="mt-4 grid grid-cols-1 gap-x-5 gap-y-2 sm:grid-cols-[max-content_1fr] [&_dd]:wrap-anywhere [&_dd]:whitespace-pre-wrap [&_dt]:font-semibold">
           <dt>{t('sampleItems.show.description')}</dt>
           <dd>{item.description || t('sampleItems.show.noDescription')}</dd>
           <dt>{t('sampleItems.show.createdAt')}</dt>
@@ -44,8 +44,8 @@ const Show = () => {
   }
 
   return (
-    <main className="page">
-      <p>
+    <main className="mx-auto max-w-[1040px] px-4 pt-8 pb-16">
+      <p className="mb-4">
         <Link to={routes.sampleItems.index}>
           {t('sampleItems.actions.backToList')}
         </Link>
