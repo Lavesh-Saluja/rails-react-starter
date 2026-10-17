@@ -22,6 +22,7 @@ lefthook-local.yml
 .DS_Store
 .idea/
 .vscode/
+.rubymate/
 *.swp
 
 # This project uses npm only (package.json "packageManager"); never commit Yarn artifacts.
