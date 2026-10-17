@@ -76,7 +76,7 @@ clone it, then rename `app_name` in `config/database.yml`, the Render services i
 | Frontend tests     | Vitest + React Testing Library + jsdom                                                     | 5.0 / 16.3                  |
 | Lint / format      | ESLint 9 (flat config) + eslint-plugin-react / react-hooks, Prettier                       | 9.39, 3.9                   |
 | Git hooks          | Lefthook (npm devDependency)                                                               | 2.2                         |
-| CSS                | One plain stylesheet with CSS variables (`app/javascript/src/index.css`)                   | —                           |
+| CSS                | Tailwind CSS v4 via `@tailwindcss/vite`; colour tokens and element defaults in `index.css` | 4.3                         |
 
 ESLint stays on 9.x because `eslint-plugin-react` (needed for the i18n lint rule below)
 does not support ESLint 10 yet.

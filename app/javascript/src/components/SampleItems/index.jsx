@@ -83,15 +83,15 @@ const SampleItems = () => {
   }
 
   return (
-    <main className="page">
-      <header className="page__header">
+    <main className="mx-auto max-w-[1040px] px-4 pt-8 pb-16">
+      <header>
         <h1>{t('sampleItems.title')}</h1>
-        <p>{t('sampleItems.subtitle')}</p>
+        <p className="mb-5 text-muted">{t('sampleItems.subtitle')}</p>
       </header>
 
       <Notice notice={notice} onDismiss={() => setNotice(null)} />
 
-      <div className="layout">
+      <div className="grid items-start gap-5 md:grid-cols-[minmax(280px,1fr)_2fr]">
         <Form
           key={editing?.id ?? NEW_ITEM_FORM_KEY}
           item={editing}
@@ -99,7 +99,10 @@ const SampleItems = () => {
           onCancel={() => setEditing(null)}
         />
 
-        <section className="card" aria-labelledby={LIST_HEADING_ID}>
+        <section
+          className="rounded-lg border border-border bg-surface p-5"
+          aria-labelledby={LIST_HEADING_ID}
+        >
           <h2 id={LIST_HEADING_ID}>{t('sampleItems.listHeading')}</h2>
           {renderItems()}
         </section>

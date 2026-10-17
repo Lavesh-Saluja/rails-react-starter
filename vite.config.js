@@ -1,4 +1,5 @@
 import { fileURLToPath } from 'node:url'
+import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { loadEnv } from 'vite'
 import { defineConfig } from 'vitest/config'
@@ -26,7 +27,7 @@ export default defineConfig(({ mode }) => {
   return {
     root: 'app/javascript',
     envDir: projectRoot,
-    plugins: [react()],
+    plugins: [react(), tailwindcss()],
     define: {
       // Commit shown in the version footer. Render static sites provide RENDER_GIT_COMMIT
       // at build time; set VITE_APP_REVISION to override (empty locally).
